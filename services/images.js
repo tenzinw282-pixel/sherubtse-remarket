@@ -1,7 +1,7 @@
 const { randomUUID } = require('node:crypto');
 const { connectionAdvice } = require('./service-errors');
 class ImageError extends Error {
-  constructor(message, status = 400) { super(message); this.status = status; }
+  constructor(message, status = 400) { super(message); this.status = status; this.safe=true; }
 }
 function imageFormat(buffer) {
   if (buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) return 'png';

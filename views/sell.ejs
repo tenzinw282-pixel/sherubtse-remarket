@@ -1,5 +1,5 @@
 <%- include('partials/header') %>
-<section class="col-lg-7 mx-auto"><h1>Sell an item</h1><p>Create a fixed-price listing with one to five images. JPEG, PNG or WebP; maximum 5 MB each.</p>
+<section class="surface form-panel"><div class="page-heading"><p class="eyebrow">Make room. Pass it on.</p><h1>Sell an item</h1><p>A clear photo and an honest description go a long way. Add one to five JPEG, PNG or WebP images, up to 5 MB each.</p></div>
 <div id="upload-status" role="status" aria-live="polite"></div>
 <form id="product-form" method="post" action="/sell" enctype="multipart/form-data">
 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -9,5 +9,8 @@
 <label class="form-label" for="condition">Condition</label><select class="form-select mb-3" name="condition" id="condition"><% for (const condition of ['New','Like New','Good','Fair','Used']) { %><option><%= condition %></option><% } %></select>
 <label class="form-label" for="price">Price (BTN)</label><input class="form-control mb-3" type="number" min="0.01" max="9999999999.99" step="0.01" name="price" id="price" required>
 <label class="form-label" for="images">Product images</label><input class="form-control mb-3" name="images" id="images" type="file" accept="image/jpeg,image/png,image/webp" multiple required>
-<button class="btn btn-primary">Upload images and publish listing</button><noscript><p>Enable JavaScript to upload images securely.</p></noscript></form>
+<div class="surface p-3 mb-4"><h2 class="h5">Selling method</h2><label for="sellingType" class="form-label">How would you like to sell?</label><select id="sellingType" name="sellingType" class="form-select mb-3"><option value="fixed">Fixed price</option><option value="auction">Auction</option></select>
+<div id="auction-settings" hidden><p class="form-help">The price above becomes your starting price. Bidding opens only after administrator approval. Times use your device timezone.</p><label class="form-label" for="increment">Minimum bid increment (Nu.)</label><input class="form-control mb-3" id="increment" name="increment" type="number" min="0.01" step="0.01" value="10.00"><label for="startsAt" class="form-label">Auction starts</label><input class="form-control mb-3" id="startsAt" name="startsAt" type="datetime-local"><label for="endsAt" class="form-label">Auction ends</label><input class="form-control mb-3" id="endsAt" name="endsAt" type="datetime-local"></div></div>
+<p class="form-help">Every listing is reviewed by an administrator before it appears publicly.</p><div id="image-previews" class="image-previews" role="group" aria-label="Selected image previews"></div>
+<button class="btn btn-primary">Upload and submit for review</button><noscript><p>Enable JavaScript to upload images securely.</p></noscript></form>
 </section><script src="/assets/upload.js" defer></script><%- include('partials/footer') %>

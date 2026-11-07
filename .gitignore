@@ -3,5 +3,8 @@ node_modules/
 .env.*
 !.env.example
 coverage/
+artifacts/
+test-results/
+playwright-report/
 *.log
 .DS_Store

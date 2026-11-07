@@ -1,14 +1,27 @@
 <%- include('partials/header') %>
-<section class="hero p-4 p-md-5 rounded-4">
-  <p class="eyebrow">A SECOND LIFE FOR STUDENT ESSENTIALS</p>
-  <h1 class="display-4 fw-bold">Less waste.<br>More possibility.</h1>
-  <p class="lead mt-4">A marketplace being built for the Sherubtse community.</p>
-  <p>Buy Smart • Sell Easy • Bid Better</p>
+<section class="home-hero" aria-labelledby="hero-title">
+  <div class="hero-copy"><p class="eyebrow">Less waste. More possibility.</p>
+  <h1 id="hero-title">Give your items a <span>second life.</span></h1>
+  <p class="lead">Good essentials deserve another chapter. Buy, sell, and find your next everyday favorite within the Sherubtse student community.</p>
+  <form action="/marketplace" method="get" class="hero-search mb-4"><label class="visually-hidden" for="home-search">Search the marketplace</label><input class="form-control" id="home-search" name="q" placeholder="What are you looking for?" maxlength="100"><button class="btn btn-primary" aria-label="Search marketplace"><i class="bi bi-search" aria-hidden="true"></i></button></form>
+  <div class="button-row"><a class="btn btn-primary" href="/marketplace">Explore marketplace <i class="bi bi-arrow-right" aria-hidden="true"></i></a><a class="btn btn-outline-secondary" href="/sell"><i class="bi bi-plus-lg" aria-hidden="true"></i> Sell an item</a></div>
+  <p class="hero-note"><i class="bi bi-shield-check" aria-hidden="true"></i> Email-verified accounts. Student-to-student connections.</p></div>
+  <div class="hero-art" aria-hidden="true"><span class="art-kicker">Pass it on. Make it matter.</span>
+  <div class="exchange-art"><div class="item-tile"><i class="bi bi-book"></i></div><div class="item-tile"><i class="bi bi-arrow-repeat"></i></div><div class="item-tile"><i class="bi bi-headphones"></i></div></div>
+  <div class="art-message"><strong>New to you.<br>Better for everyone.</strong><span>For the things you need. And the things you no longer do.</span></div></div>
 </section>
-<section class="py-5 col-lg-8">
-  <h2>Ready for your next chapter</h2>
-  <p>Register and verify your email to create a fixed-price listing with product photos. Purchases and auctions are still under development.</p>
-  <p><a class="btn btn-primary" href="/register">Create an account</a> <a class="btn btn-outline-secondary" href="/sell">Sell an item</a></p>
-  <p class="text-secondary">No college email domain is assumed. Future email verification will be distinguished from official college affiliation.</p>
+<section class="mb-5" id="categories" aria-labelledby="category-title"><h2 id="category-title">Find your kind of useful.</h2><div class="category-chips mt-3"><% for(const category of categories){ %><a href="/marketplace?category=<%= category.id %>"><%= category.name %></a><% } %></div></section>
+<% for(const announcement of announcements){ %><aside class="alert alert-info"><strong><%= announcement.title %></strong><p class="mb-0"><%= announcement.body %></p></aside><% } %>
+<section class="mb-5"><div class="section-title"><h2>Recently approved</h2><a href="/marketplace">View all items <i class="bi bi-arrow-right" aria-hidden="true"></i></a></div><%- include('partials/products',{products:recent}) %></section>
+<% if(featured.length){ %><section class="mb-5"><div class="section-title"><h2>Featured finds</h2><a href="/marketplace">Explore more</a></div><%- include('partials/products',{products:featured}) %></section><% } %>
+<section class="mb-5"><div class="section-title"><h2>Auctions to watch</h2><a href="/auctions">All auctions</a></div><%- include('partials/products',{products:auctions}) %></section>
+<section class="how-section" aria-labelledby="how-title">
+  <div class="section-heading"><p class="eyebrow">A little simpler. A little smarter.</p><h2 id="how-title">A good place to start fresh.</h2><p>Keep useful things in use, right here in your community.</p></div>
+  <div class="feature-grid">
+  <article class="surface feature-card"><span class="feature-number">01</span><h3>Make yourself at home</h3><p>Create an account and verify your email. One account for everything you buy and sell.</p></article>
+  <article class="surface feature-card"><span class="feature-number">02</span><h3>Give it another chapter</h3><p>Add clear photos, an honest description, and a fair price. Your next listing starts with what you already have.</p></article>
+  <article class="surface feature-card"><span class="feature-number">03</span><h3>Keep it in the community</h3><p>Make room for something new while helping another student find something useful.</p></article>
+  </div>
+  <div class="community-note"><i class="bi bi-recycle" aria-hidden="true"></i><p>Thoughtful choices add up. Reusing student essentials means less waste and more value. Email verification confirms email access; it does not establish official college affiliation.</p></div>
 </section>
 <%- include('partials/footer') %>

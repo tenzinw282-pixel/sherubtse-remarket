@@ -1,5 +1,5 @@
 <%- include('partials/header') %>
-<h1><%= title %></h1>
+<section class="surface content-panel error-panel"><i class="bi bi-signpost-split error-icon" aria-hidden="true"></i><h1><%= title %></h1>
 <p><%= message %></p>
-<a href="/">Return home</a>
+<div class="button-row justify-content-center"><% if(title==='Login required'){ %><a class="btn btn-primary" href="/login">Log in</a><a class="btn btn-outline-secondary" href="/register">Create an account</a><% }else{ %><a class="btn btn-primary" href="/">Return home <i class="bi bi-arrow-right" aria-hidden="true"></i></a><% } %></div></section>
 <%- include('partials/footer') %>

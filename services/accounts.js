@@ -1,9 +1,10 @@
 const bcrypt = require('bcrypt');
 const { randomInt, randomUUID, createHmac, timingSafeEqual } = require('node:crypto');
 const { connectionAdvice } = require('./service-errors');
+const {notify}=require('./database');
 
 class AccountError extends Error {
-  constructor(message, status = 400) { super(message); this.status = status; }
+  constructor(message, status = 400) { super(message); this.status = status; this.safe=true; }
 }
 function otpDigest(secret, challengeId, code) {
   return createHmac('sha256', secret).update(`email-otp:${challengeId}:${code}`).digest('hex');
@@ -75,6 +76,7 @@ function createAccounts({ pool, mail, config }) {
         } else {
           await client.query('UPDATE users SET email_verified_at = now(), updated_at = now() WHERE id = $1 AND email = $2', [userId, challenge.email]);
           await client.query('UPDATE email_verifications SET consumed_at = now() WHERE id = $1', [challenge.id]);
+          await notify(client,userId,`verification:${challenge.id}`,'email_verified','Your email is verified. Welcome to Sherubtse ReMarket.','/dashboard');
         }
       }
       await client.query('COMMIT');

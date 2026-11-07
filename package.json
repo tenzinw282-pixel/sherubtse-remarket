@@ -8,14 +8,19 @@
   },
   "scripts": {
     "start": "node server.js",
+    "admin:create": "node scripts/create-admin.js",
     "dev": "node --watch server.js",
     "migrate": "node scripts/migrate.js",
     "test": "node --test",
+    "test:ui": "node --test browser/design.spec.js",
+    "test:integration": "node --test integration/marketplace.spec.js",
+    "test:admin": "node --test integration/admin.spec.js",
     "test:database": "node scripts/check-database.js",
     "check:services": "node scripts/check-services.js",
     "check:upload": "node scripts/check-upload.js"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
     "bcrypt": "^6.0.0",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
@@ -32,9 +37,14 @@
     "multer": "^2.0.2",
     "nodemailer": "^10.3.1",
     "pg": "^8.13.1",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "validator": "^13.15.35"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.65.0",
+    "nodemon": "^3.1.14",
+    "socket.io-client": "^4.8.4",
     "supertest": "^7.0.0"
   }
 }

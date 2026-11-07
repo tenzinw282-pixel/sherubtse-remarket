@@ -1,5 +1,5 @@
 <%- include('partials/header') %>
-<section class="col-lg-6 mx-auto"><h1>Log in</h1>
+<section class="surface auth-card"><p class="eyebrow">Good to see you again</p><h1>Welcome back.</h1><p class="intro">Log in to give your student essentials a new chapter.</p>
 <% if (message) { %><div role="status" class="alert alert-info"><%= message %></div><% } %>
 <form method="post" action="/login"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
 <label class="form-label" for="email">Email</label><input class="form-control mb-3" id="email" name="email" type="email" autocomplete="email" required>

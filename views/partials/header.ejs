@@ -3,18 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10243A">
+  <link rel="icon" href="/assets/brand/icon.svg" type="image/svg+xml">
+  <meta name="description" content="Give student essentials a second life with Sherubtse ReMarket, an independent student marketplace.">
+  <link rel="preload" href="/vendor/inter/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <title><%= title %> · Sherubtse ReMarket</title>
   <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
   <link rel="stylesheet" href="/vendor/icons/bootstrap-icons.css">
   <link rel="stylesheet" href="/assets/styles.css">
 </head>
 <body>
-<header class="border-bottom"><nav class="container py-3" aria-label="Main navigation">
-  <a class="brand text-decoration-none" href="/">Sherubtse <span>ReMarket</span></a>
-  <div class="d-flex gap-3 flex-wrap mt-3">
+<a href="#main-content" class="skip-link">Skip to content</a>
+<header class="site-header"><nav class="container site-nav" aria-label="Main navigation">
+  <a class="brand" href="/" aria-label="Sherubtse ReMarket home"><span class="brand-name"><img src="/assets/brand/icon.svg" width="32" height="32" alt=""> Sherubtse <span>ReMarket</span></span><span class="brand-caption">A second life. A better find.</span></a>
+  <button type="button" class="nav-toggle btn btn-outline-secondary" aria-expanded="false" aria-controls="main-nav-links" aria-label="Toggle navigation" hidden><i class="bi bi-list" aria-hidden="true"></i></button>
+  <div class="nav-links" id="main-nav-links">
+  <a class="nav-link" href="/marketplace">Marketplace</a><a class="nav-link" href="/auctions">Auctions</a>
   <% if (typeof currentUser !== 'undefined' && currentUser) { %>
-  <a href="/sell">Sell an item</a><form method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="btn btn-link p-0">Log out</button></form>
-  <% } else { %><a href="/register">Register</a><a href="/login">Log in</a><% } %>
+  <a class="nav-link" href="/dashboard">Dashboard</a><a class="nav-link" href="/profile">Profile</a><a class="nav-link" href="/notifications" aria-label="Notifications"><i class="bi bi-bell" aria-hidden="true"></i><span id="notification-count" aria-hidden="true"></span></a><a class="nav-link" href="/messages" aria-label="Messages"><i class="bi bi-chat-dots" aria-hidden="true"></i></a><% if(currentUser.role==='admin'){ %><a class="nav-link" href="/admin">Admin</a><% } %>
+  <a class="btn btn-primary" href="/sell"><i class="bi bi-plus-lg" aria-hidden="true"></i> Sell an item</a><form method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="btn btn-link">Log out</button></form>
+  <% } else { %><a class="nav-link" href="/login">Log in</a><a class="btn btn-primary" href="/register">Sign up <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a><% } %>
   </div>
 </nav></header>
-<main class="container py-5">
+<main id="main-content" class="container page-shell" tabindex="-1">

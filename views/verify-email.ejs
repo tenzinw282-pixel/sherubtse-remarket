@@ -1,5 +1,5 @@
 <%- include('partials/header') %>
-<section class="col-lg-6 mx-auto"><h1>Verify your email</h1>
+<section class="surface auth-card"><p class="eyebrow">One small step for a safer community</p><h1>Check your inbox.</h1>
 <p>Enter the six-digit code emailed to you. It expires after five minutes. Each new code replaces the previous code.</p>
 <% if (message) { %><div class="alert alert-info" role="status"><%= message %></div><% } %>
 <form method="post" action="/verify-email"><input type="hidden" name="_csrf" value="<%= csrfToken %>">

@@ -4,7 +4,41 @@ Buy Smart â€¢ Sell Easy â€¢ Bid Better
 
 A student marketplace for Sherubtse College, Bhutan. One Express service serves EJS, API routes and Socket.IO. PostgreSQL owns transactional state; MongoDB owns messaging, notifications and activity records.
 
-**Current status: foundation plus email registration and product uploads.** Registration, emailed OTP verification, login/logout and fixed-price listing creation with Cloudinary images are implemented. Buying, auctions, messaging, dashboards, password recovery and moderation remain planned. See [the detailed plan](IMPLEMENTATION_PLAN.md). This is not yet a production marketplace.
+## UI redesign — Phase 1
+
+The design-system foundation is implemented across existing pages: the requested navy/gold palette, locally served Inter, shared typography/spacing/control tokens, responsive navigation and footer, form/content cards, focus indicators, skip navigation and reduced-motion support. No schema changes or account changes are needed. See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) for component rules and [REDESIGN_PLAN.md](REDESIGN_PLAN.md) for the audit and remaining implementation phases.
+
+Run `npm test` for backend/HTTP regressions and `npm run test:ui` for browser layout/accessibility checks. On Windows the latter uses installed Microsoft Edge; set `BROWSER_CHANNEL` if using another installed Playwright-supported channel. Other platforms need the corresponding Playwright browser installed. Browser tests use synthetic data in an isolated local fixture, not real accounts. Screenshots are saved in ignored `artifacts/design-system/`. The expanded suite checks 135 page/viewport combinations at 320, 375, 768, 1024 and 1440px, axe WCAG scans, skip-link keyboard focus, reduced motion and enlarged text reflow. Automated scans are not a full WCAG certification.
+
+The later implementation now includes marketplace, profiles, dashboards, approvals, transactions, auctions, messaging and admin management. The original compact exchange SVG is in `public/brand/icon.svg`. See [COMPLETION_STATUS.md](COMPLETION_STATUS.md) for the current audit, verification and remaining limits; earlier design/implementation plans are historical roadmaps.
+
+**Current status: connected student marketplace.** Accounts, profile/avatar editing, searchable approved listings, unified dashboards, purchases/handover/receipt/reviews, real-time bidding and reliable auction closure, admin approvals/management, conversations and notifications are implemented. Password recovery and some further refinements remain outstanding. This has not been deployed or certified for public production use.
+
+## Administrator setup and approval workflow
+
+Run `npm run admin:create` from a trusted terminal (`npm.cmd run admin:create` on PowerShell). Enter the administrator email. For a new account, enter its name and a strong password; password input is hidden. For an existing account, explicitly type `PROMOTE` to confirm the role change. Promotion preserves its password, profile, listings and history. Alternatively provide `ADMIN_EMAIL`, `ADMIN_NAME`, `ADMIN_PASSWORD`, and, only when intentionally promoting an existing account, `ADMIN_CONFIRM_PROMOTION=PROMOTE` through a protected shell environment; never put passwords in command arguments or commit them. No default administrator is created.
+
+Log in at `/login` with the account's own credentials. New/unverified accounts must finish real emailed OTP verification before `/admin` access. Existing administrators remain subject to verification and suspension checks. Students cannot set their role through registration. The protected CLI has been tested for explicit promotion, account/listing preservation and idempotence in an isolated database schema.
+
+Every student submission now starts **Pending Review**. In `/admin/approvals`, inspect the listing and supply a reason to approve/reject. Approved available products appear in the homepage and marketplace. Hidden products remain visible only to their owner or an admin. Editing resubmits for review; listings with bids or active transactions cannot be edited or withdrawn. Existing product records were retained and now require review too.
+
+## Marketplace and auctions
+
+Browse `/marketplace` or `/auctions`, save favorites on product details, and use `/sell` to submit fixed-price or auction listings. Auction start/end defaults synchronize to PostgreSQL time, and submitted times are stored in UTC. An administrator must approve before bidding. One account supplies buyer and seller capabilities through `/dashboard` and its listings/purchases/sales/bids/won-auctions/favorites sections.
+
+Fixed-price buying reserves the item atomically. Arrange collection/payment outside the site. The seller confirms handover in My Sales; the buyer confirms receipt in My Purchases. Both confirmations complete the transaction and enable reviews. Participants can cancel before handover or open a dispute; administrators can resume a disputed transaction or cancel it and remove the listing. No payment credentials are accepted.
+
+Bidding validates exact decimal amounts under PostgreSQL row locks; self-bids, early/late bids, unapproved items and suspended users are rejected. Socket.IO broadcasts committed bids; HTTP polling reconciles state after missed events. A five-second worker plus startup reconciliation closes overdue auctions and creates at most one winner transaction, then delivers persistent outbox notifications. Keep the Render service active for prompt reconciliation; downtime is recovered on restart. See My Won Auctions for winning purchases.
+
+Use Contact Seller on a listing, or Contact Buyer/Seller on a transaction, to start a private product conversation. `/messages` enforces participant authorization, stores messages in MongoDB and delivers socket events. `/notifications` shows persisted updates with private read actions.
+
+## Complete workflow tests
+
+Run `npm test`, `npm run test:admin`, `npm run test:integration`, and `npm run test:ui`. The integration suites create only isolated test schemas/databases and remove those resources afterward; credentials must have those permissions. Email/images are mocked in workflow tests. Optional `TEST_DATABASE_URL` and `TEST_MONGODB_URI` may point to separately provisioned test services. Do not interrupt integration-test cleanup. Browser testing requires installed Edge on Windows (or an installed Playwright channel configured by `BROWSER_CHANNEL`).
+
+## Publishing the current source
+
+Review `git status` and `git diff`, confirm `.env` is ignored and untracked, then stage reviewed source, commit, and push to your configured private GitHub remote. No push, account promotion or production deployment is performed automatically. Render's existing build/pre-deploy/start commands are preserved: `npm ci`, `npm run migrate && node scripts/sync-mongo-indexes.js`, `npm start`. Set the actual HTTPS `APP_BASE_URL`, all service secrets, and `NODE_ENV=production`; use `/health` for readiness. The same service serves Socket.IO. Apply migration 003 before running the new code and create your administrator through a protected shell.
 
 ## Local setup
 
@@ -52,28 +86,28 @@ Images require a verified, non-suspended account and session-bound CSRF token. T
 - A `delivered_at` database error means migration `002_otp_delivery.sql` has not been applied.
 - If credentials were accidentally placed in a tracked file or shared output, rotate the SMTP app password and Cloudinary secret, update `.env`, and remove the exposed values from repository history if committed.
 
-For real migration checks, set `TEST_DATABASE_URL` to a separate disposable PostgreSQL database with `test` in its name and run `npm run test:database`. This command applies migrations and checks repeatability and category data. Never point it at application data. Real concurrency/auction/authentication tests arrive with their respective phases.
+For standalone migration checks, set `TEST_DATABASE_URL` to a separate disposable PostgreSQL database with `test` in its name and run `npm run test:database`. This command checks migration repeatability and category data. The full `test:integration` command separately verifies real transactions/concurrency in an isolated schema, as described above.
 
 ## Structure
 
-- `app.js`, `server.js`: HTTP composition, server lifecycle and Socket.IO foundation. Socket connections are rejected until authentication is implemented.
+- `app.js`, `server.js`: HTTP composition, authenticated Socket.IO setup, reconciliation jobs and graceful server lifecycle.
 - `config/`: environment validation and PostgreSQL, MongoDB, SMTP and Cloudinary setup.
 - `middleware/`: security middleware, including session-bound CSRF checks.
 - `migrations/`, `scripts/`: transactional, checksum-tracked SQL migrations and index setup.
 - `models/`: Mongoose conversation, message, notification and activity schemas.
-- `views/`, `public/`: shared EJS partials, development landing page and styles; Bootstrap assets served locally.
-- `controllers/`, `routes/`, `services/`, `jobs/`: reserved for subsequent feature phases.
-- `tests/`: automated checks.
+- `views/`, `public/`: shared EJS layouts, marketplace/account/admin pages, browser interactions and local Bootstrap/Inter assets.
+- `routes/`, `services/`, `jobs/`: HTTP routes, catalog/transaction/bidding/approval logic and outbox/reconciliation workers.
+- `tests/`, `integration/`, `browser/`: fast regressions, isolated real-database/CLI tests and browser accessibility/layout checks.
 
-Currency uses PostgreSQL `numeric(12,2)`; future services must retain strings/decimal arithmetic rather than JavaScript floating point. Timestamps use `timestamptz` and pool timezone UTC. Migrations use a PostgreSQL advisory lock and per-file transaction. Never edit applied migrations; add a new numbered file.
+Currency uses PostgreSQL `numeric(12,2)` and JavaScript BigInt cents for comparisons/increments. Timestamps use `timestamptz`; auction deadlines use database time. Migrations use a PostgreSQL advisory lock and per-file transaction. Use a direct Neon URL for migration/test operations requiring session-level settings or locks. Never edit applied migrations; add a new numbered file.
 
 ## GitHub and Render
 
-Create a private GitHub repository. From this directory run `git init`, `git add .`, `git commit -m "Initialize ReMarket foundation"`, then add the remote provided by GitHub and push. Inspect staged files first and ensure `.env` is excluded. No repository or remote is created automatically by this phase.
+Use your existing private GitHub repository and remote. Review `git status` and `git diff`, verify `.env` is ignored/untracked, stage only reviewed source, then commit and push to your intended branch. If no remote is configured, add the private repository's remote before pushing. No commit or push was performed automatically.
 
 In Render, connect the repository and use `render.yaml` as a Blueprint, or create a Node web service with build `npm ci`, pre-deploy `npm run migrate && node scripts/sync-mongo-indexes.js`, start `npm start`, and health path `/health`. Use a service plan supporting pre-deploy commands; otherwise run migrations/index setup from a controlled shell before starting the service. Set the environment values from `.env.example`, set `NODE_ENV=production` and `APP_BASE_URL` to your actual HTTPS origin. Render supplies `PORT`. No deployment URL is assumed.
 
-Set database network access for Render and verify the health endpoint. PostgreSQL persists sessions, Atlas persists documents and Cloudinary will persist uploads; no persistent Render filesystem is needed. Configure only one trusted Render proxy hop, HTTPS and secure cookies. Deployment is premature for public marketplace use until later phases pass their gates.
+Set database network access for Render and verify the health endpoint. PostgreSQL persists sessions, Atlas persists documents and Cloudinary persists uploads; no persistent Render filesystem is needed. Configure one trusted Render proxy hop, HTTPS and secure cookies. Complete real service acceptance and the remaining release checks in `COMPLETION_STATUS.md` before a public launch.
 
 ## Troubleshooting
 
@@ -81,14 +115,16 @@ Set database network access for Render and verify the health endpoint. PostgreSQ
 - **Missing environment variables:** create `.env` in the repository root and fill required values. Use a random session secret rather than the example placeholder.
 - **Startup failure:** check database credentials, TLS, DNS and network allowlists; run migrations. Errors intentionally omit connection strings.
 - **Session table missing:** run `npm run migrate` against the same database used by the web service.
+- **Failed running server.js:** read the startup message above the watcher notice. Startup checks report missing session/verification tables; run `npm.cmd run migrate` and restart. Database connection failures include redacted guidance for authentication, DNS or firewall problems.
+- **Port already in use:** only run one development server. If `http://localhost:3000/health` responds, open the existing website; otherwise identify the process using your configured port or set a free `PORT` in `.env` before restarting.
 - **Health 503:** check both database services. SMTP and Cloudinary are not health dependencies.
 - **CSRF 403:** reload the form and submit the session token as `_csrf` or `X-CSRF-Token`. Cookies must be enabled.
 - **Production session cookie absent:** verify HTTPS, the Render proxy and `NODE_ENV`; local development uses HTTP-compatible cookies.
 - **Changed migration checksum:** restore the applied migration and create a new migration for changes.
 
-## Phase 1 verification record
+## Verification record
 
-Executed: all 29 foundation/account/upload tests passed. SMTP authenticated connection succeeded. Cloudinary authenticated API check, actual upload through the product image service, and deletion of the temporary test asset succeeded. No test email was sent to an unspecified recipient. Live database-backed registration remains unverified while database connection values are placeholders.
+The regression suite, real PostgreSQL/MongoDB marketplace suite, actual CLI promotion test and expanded browser suite have been executed. See the completion report and `COMPLETION_STATUS.md` for final counts and limits. SMTP authentication and an actual Cloudinary upload/delete succeeded in earlier work. Automated workflow tests mock email/image providers and do not send messages to real students.
 
-Live Neon/Atlas migrations, SMTP delivery, Cloudinary uploads and Render deployment require real credentials and are not verified by offline tests. Browser responsiveness has not been checked. Subsequent phases must supply real feature implementations before their functionality is claimed.
+Database-backed registration, approvals, concurrent buying/bidding, auction closure, messages, notifications and admin pages are covered by integration tests. Layout and automated accessibility are checked at five widths. Render deployment, manual screen-reader acceptance and final real student inbox delivery are not claimed.
 

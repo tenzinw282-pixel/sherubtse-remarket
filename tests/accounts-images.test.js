@@ -196,7 +196,7 @@ test('registration, email verification, login and logout work through HTTP with 
   assert.ok(!verify.text.includes(capturedCode(state)));
   const response=await agent.post('/verify-email').type('form').send({_csrf:tokenFrom(verify),code:capturedCode(state)}).expect(200);
   assert.ok(response.text.includes('Email verified successfully'));
-  await agent.post('/login').type('form').send({_csrf:tokenFrom(response),email:'student@example.test',password:'secure-student-password'}).expect(302).expect('Location','/sell');
+  await agent.post('/login').type('form').send({_csrf:tokenFrom(response),email:'student@example.test',password:'secure-student-password'}).expect(302).expect('Location','/dashboard');
   const sell=await agent.get('/sell').expect(200);
   await agent.post('/logout').type('form').send({_csrf:tokenFrom(sell)}).expect(302);
   await agent.get('/sell').expect(401);

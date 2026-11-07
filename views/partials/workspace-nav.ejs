@@ -1,0 +1,3 @@
+<nav class="workspace-nav" aria-label="Student dashboard">
+<% for(const [href,label] of [['/dashboard','Overview'],['/dashboard/listings','My listings'],['/dashboard/purchases','My purchases'],['/dashboard/sales','My sales'],['/dashboard/bids','My bids'],['/dashboard/won-auctions','Won auctions'],['/dashboard/favorites','Favorites'],['/messages','Messages'],['/notifications','Notifications'],['/profile','Profile settings']]){ %><a href="<%= href %>"><%= label %></a><% } %>
+</nav>

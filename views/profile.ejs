@@ -1,0 +1,9 @@
+<%- include('partials/header') %><%- include('partials/workspace-nav') %>
+<section class="surface form-panel"><div class="page-heading"><p class="eyebrow">Make yourself at home</p><h1>Profile settings</h1><p>Your name, bio and profile photo are visible on your public profile. Email and student ID stay private.</p></div>
+<% if(currentUser.avatar_url){ %><img class="avatar mb-3" src="<%= currentUser.avatar_url %>" alt="Your profile photo" width="96" height="96"><% } %>
+<div role="status" data-form-status aria-live="polite"></div><form action="/profile" method="post" enctype="multipart/form-data" data-ajax>
+<input type="hidden" name="_csrf" value="<%= csrfToken %>"><label for="fullName" class="form-label">Full name</label><input class="form-control mb-3" id="fullName" name="fullName" value="<%= currentUser.full_name %>" required minlength="2" maxlength="120">
+<label for="studentId" class="form-label">Student ID (optional, private)</label><input class="form-control mb-3" id="studentId" name="studentId" value="<%= currentUser.student_id || '' %>" maxlength="80">
+<label for="bio" class="form-label">About you</label><textarea class="form-control mb-3" name="bio" id="bio" maxlength="1000"><%= currentUser.bio || '' %></textarea>
+<label for="avatar" class="form-label">Profile photo (optional)</label><input class="form-control mb-3" id="avatar" name="avatar" type="file" accept="image/jpeg,image/png,image/webp"><p class="form-help">JPEG, PNG or WebP, up to 5 MB.</p>
+<p class="text-secondary">Verified email: <%= currentUser.email %></p><button class="btn btn-primary">Save profile</button><a class="btn btn-link" href="/users/<%= currentUser.id %>">View public profile</a></form></section><%- include('partials/footer') %>

@@ -6,6 +6,7 @@ const { readConfig } = require('../config/env');
 const { createApp } = require('../app');
 const { migrate } = require('../scripts/migrate');
 const { createServices } = require('../config/services');
+const { databaseFailure } = require('../config/databases');
 
 function environment(overrides = {}) {
   return { NODE_ENV: 'test', APP_BASE_URL: 'http://localhost:3000',
@@ -16,7 +17,7 @@ function environment(overrides = {}) {
 }
 function application({ sqlFailure = false, mongoState = 1 } = {}) {
   return createApp({ config: readConfig(environment()),
-    pool: { query: async () => { if (sqlFailure) throw new Error('private database error'); } },
+    pool: { query: async () => { if (sqlFailure) throw new Error('private database error'); return {rows:[],rowCount:0}; } },
     mongo: { connection: { readyState: mongoState, db: { admin: () => ({ ping: async () => {} }) } } },
     sessionStore: new session.MemoryStore() }).app;
 }
@@ -27,6 +28,13 @@ test('configuration rejects missing secrets and unsafe production settings', () 
   assert.throws(() => readConfig(environment({ PORT: 'invalid' })), /port/);
   assert.equal(readConfig(environment()).PORT, 3000);
   assert.equal(readConfig(environment()).ALLOWED_EMAIL_DOMAIN, '');
+});
+test('startup diagnostics explain database failures without exposing provider errors', () => {
+  const failure = databaseFailure('PostgreSQL', { message: 'private connection string', errors: [{ code: 'EACCES' }] });
+  assert.match(failure.message, /Network access was denied/);
+  assert.ok(!failure.message.includes('private connection string'));
+  assert.match(databaseFailure('PostgreSQL', { code: '28P01' }).message, /authentication failed/);
+  assert.match(databaseFailure('MongoDB', { code: 'ENOTFOUND' }).message, /hostname/);
 });
 test('SMTP and Cloudinary clients construct without sending requests', () => {
   const services = createServices(readConfig(environment()));

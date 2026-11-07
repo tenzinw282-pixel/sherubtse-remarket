@@ -65,7 +65,7 @@ function accountRoutes({ pool, services, config }) {
     await new Promise((resolve, reject) => req.session.regenerate(error => error ? reject(error) : resolve()));
     if (!user.email_verified_at) { req.session.pendingUserId = user.id; return res.redirect('/verify-email'); }
     req.session.userId = user.id;
-    res.redirect('/sell');
+    res.redirect(user.role==='admin'?'/admin':'/dashboard');
   });
   router.post('/logout', (req, res, next) => req.session.destroy(error => {
     if (error) return next(error);

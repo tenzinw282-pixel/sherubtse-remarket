@@ -1,0 +1,14 @@
+<%- include('partials/header') %>
+<div class="page-heading"><p class="eyebrow">Find your next everyday favorite</p><h1><%= title %></h1><p><%= total %> approved listing<%= total===1?'':'s' %> in the community</p></div>
+<form class="surface filter-bar mb-4" method="get" action="/marketplace">
+<div><label for="q" class="form-label">Search</label><input class="form-control" id="q" name="q" value="<%= filters.q || '' %>" placeholder="Textbooks, headphones…" maxlength="100"></div>
+<div><label for="category" class="form-label">Category</label><select class="form-select" id="category" name="category"><option value="">All categories</option><% for(const c of categories){ %><option value="<%= c.id %>" <%= String(filters.category)===String(c.id)?'selected':'' %>><%= c.name %></option><% } %></select></div>
+<div><label for="condition" class="form-label">Condition</label><select class="form-select" id="condition" name="condition"><option value="">Any condition</option><% for(const c of ['New','Like New','Good','Fair','Used']){ %><option <%= filters.condition===c?'selected':'' %>><%= c %></option><% } %></select></div>
+<div><label for="type" class="form-label">Selling method</label><select class="form-select" name="type" id="type"><option value="">All items</option><option value="fixed" <%= filters.type==='fixed'?'selected':'' %>>Fixed price</option><option value="auction" <%= filters.type==='auction'?'selected':'' %>>Auction</option></select></div>
+<div><label class="form-label" for="min">Min Nu.</label><input class="form-control" type="number" id="min" name="min" min="0.01" step="0.01" value="<%= filters.min || '' %>"></div>
+<div><label class="form-label" for="max">Max Nu.</label><input class="form-control" type="number" id="max" name="max" min="0.01" step="0.01" value="<%= filters.max || '' %>"></div>
+<div><label class="form-label" for="sort">Sort</label><select class="form-select" id="sort" name="sort"><option value="newest">Newest first</option><option value="low" <%= filters.sort==='low'?'selected':'' %>>Price: low to high</option><option value="high" <%= filters.sort==='high'?'selected':'' %>>Price: high to low</option></select></div>
+<div class="d-flex align-items-end gap-2"><button class="btn btn-primary">Apply</button><a href="/marketplace" class="btn btn-link">Reset</a></div></form>
+<%- include('partials/products',{products}) %>
+<nav aria-label="Marketplace pages" class="button-row mt-4"><% if(page>1){ %><a class="btn btn-outline-secondary" href="/marketplace?<%= pageQuery %>&amp;page=<%= page-1 %>">Previous</a><% } %><span>Page <%= page %> of <%= pages %></span><% if(page<pages){ %><a class="btn btn-outline-secondary" href="/marketplace?<%= pageQuery %>&amp;page=<%= page+1 %>">Next</a><% } %></nav>
+<%- include('partials/footer') %>

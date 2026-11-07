@@ -1,0 +1,15 @@
+<%- include('partials/header') %>
+<section class="col-lg-6 mx-auto">
+<h1>Create your student account</h1><p>Email verification confirms email access, not official college affiliation.</p>
+<% if (message) { %><div role="status" class="alert alert-info"><%= message %></div><% } %>
+<form method="post" action="/register">
+<input type="hidden" name="_csrf" value="<%= csrfToken %>">
+<label class="form-label" for="fullName">Full name</label><input class="form-control mb-3" id="fullName" name="fullName" required minlength="2" maxlength="120" autocomplete="name">
+<label class="form-label" for="email">Email</label><input class="form-control mb-3" id="email" name="email" type="email" required maxlength="254" autocomplete="email">
+<label class="form-label" for="studentId">Student ID (optional)</label><input class="form-control mb-3" id="studentId" name="studentId" maxlength="80">
+<label class="form-label" for="password">Password (at least 12 characters)</label><input class="form-control mb-3" id="password" name="password" type="password" required minlength="12" maxlength="72" autocomplete="new-password">
+<label class="form-label" for="confirmPassword">Confirm password</label><input class="form-control mb-3" id="confirmPassword" name="confirmPassword" type="password" required autocomplete="new-password">
+<label class="d-block mb-3"><input type="checkbox" name="terms" required> I accept the <a href="/terms">terms and privacy policy</a>.</label>
+<button class="btn btn-primary" type="submit">Register and email verification code</button>
+</form><p class="mt-3"><a href="/login">Already registered? Log in</a></p>
+</section><%- include('partials/footer') %>

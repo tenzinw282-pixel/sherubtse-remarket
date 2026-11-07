@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> · Sherubtse ReMarket</title>
+  <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/vendor/icons/bootstrap-icons.css">
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+<header class="border-bottom"><nav class="container py-3" aria-label="Main navigation">
+  <a class="brand text-decoration-none" href="/">Sherubtse <span>ReMarket</span></a>
+  <div class="d-flex gap-3 flex-wrap mt-3">
+  <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+  <a href="/sell">Sell an item</a><form method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="btn btn-link p-0">Log out</button></form>
+  <% } else { %><a href="/register">Register</a><a href="/login">Log in</a><% } %>
+  </div>
+</nav></header>
+<main class="container py-5">

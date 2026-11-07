@@ -1,0 +1,13 @@
+<%- include('partials/header') %>
+<section class="col-lg-7 mx-auto"><h1>Sell an item</h1><p>Create a fixed-price listing with one to five images. JPEG, PNG or WebP; maximum 5 MB each.</p>
+<div id="upload-status" role="status" aria-live="polite"></div>
+<form id="product-form" method="post" action="/sell" enctype="multipart/form-data">
+<input type="hidden" name="_csrf" value="<%= csrfToken %>">
+<label class="form-label" for="title">Title</label><input class="form-control mb-3" name="title" id="title" minlength="3" maxlength="160" required>
+<label class="form-label" for="description">Description</label><textarea class="form-control mb-3" name="description" id="description" minlength="10" maxlength="10000" required></textarea>
+<label class="form-label" for="categoryId">Category</label><select class="form-select mb-3" name="categoryId" id="categoryId" required><% for (const category of categories) { %><option value="<%= category.id %>"><%= category.name %></option><% } %></select>
+<label class="form-label" for="condition">Condition</label><select class="form-select mb-3" name="condition" id="condition"><% for (const condition of ['New','Like New','Good','Fair','Used']) { %><option><%= condition %></option><% } %></select>
+<label class="form-label" for="price">Price (BTN)</label><input class="form-control mb-3" type="number" min="0.01" max="9999999999.99" step="0.01" name="price" id="price" required>
+<label class="form-label" for="images">Product images</label><input class="form-control mb-3" name="images" id="images" type="file" accept="image/jpeg,image/png,image/webp" multiple required>
+<button class="btn btn-primary">Upload images and publish listing</button><noscript><p>Enable JavaScript to upload images securely.</p></noscript></form>
+</section><script src="/assets/upload.js" defer></script><%- include('partials/footer') %>

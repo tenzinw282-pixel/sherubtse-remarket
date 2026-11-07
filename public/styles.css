@@ -1,0 +1,8 @@
+:root { --navy: #122d4c; --gold: #e7bb59; }
+body { color: var(--navy); background: #fcfbf7; min-height: 100vh; }
+.brand { color: var(--navy); font-size: clamp(1.2rem, 4vw, 1.6rem); font-weight: 750; }
+.brand span { color: #806019; }
+.hero { background: var(--navy); color: white; }
+.hero .eyebrow { color: var(--gold); letter-spacing: .12em; font-size: .8rem; }
+a { color: #204e80; }
+a:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }

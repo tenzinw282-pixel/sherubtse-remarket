@@ -1,0 +1,6 @@
+<%- include('partials/header') %>
+<h1><%= product.title %></h1><p class="lead">BTN <%= product.price %> · <%= product.condition %></p>
+<div class="row g-3 mb-4"><% for (const photo of photos) { %><div class="col-12 col-md-6"><img class="img-fluid rounded" src="<%= photo.secure_url %>" alt="<%= product.title %>" loading="lazy" width="800" height="800"></div><% } %></div>
+<p class="text-break"><%= product.description %></p><p>Listed by <%= product.seller_name %></p>
+<p>This release supports listing creation and image storage. Purchases and auctions are still under development.</p>
+<%- include('partials/footer') %>

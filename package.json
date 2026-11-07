@@ -1,0 +1,40 @@
+{
+  "name": "sherubtse-remarket",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sherubtse College student second-hand marketplace",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "migrate": "node scripts/migrate.js",
+    "test": "node --test",
+    "test:database": "node scripts/check-database.js",
+    "check:services": "node scripts/check-services.js",
+    "check:upload": "node scripts/check-upload.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.3",
+    "cloudinary": "^2.5.1",
+    "connect-pg-simple": "^10.0.0",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.0",
+    "express-session": "^1.18.1",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.0.0",
+    "mongoose": "^8.9.5",
+    "multer": "^2.0.2",
+    "nodemailer": "^10.3.1",
+    "pg": "^8.13.1",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "supertest": "^7.0.0"
+  }
+}

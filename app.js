@@ -14,6 +14,8 @@ const {adminRoutes}=require('./routes/admin');
 const {commerceRoutes}=require('./routes/commerce');
 const {createCommerce}=require('./services/commerce');
 const {communityRoutes}=require('./routes/community');
+const {workspaceId}=require('./config/runtime');
+const {logFailure}=require('./config/diagnostics');
 
 function createApp({ config, pool, mongo, sessionStore, services = createServices(config), communityModels }) {
   const app = express();
@@ -29,6 +31,8 @@ function createApp({ config, pool, mongo, sessionStore, services = createService
   app.use('/vendor/icons', express.static(path.join(__dirname, 'node_modules/bootstrap-icons/font')));
   app.use('/vendor/inter', express.static(path.join(__dirname, 'node_modules/@fontsource-variable/inter/files')));
   app.get('/health', async (req, res) => {
+    if(config.NODE_ENV!=='production')res.set('X-ReMarket-Workspace',workspaceId);
+    if(/^[0-9a-f]{40}$/i.test(config.RENDER_GIT_COMMIT||''))res.set('X-ReMarket-Revision',config.RENDER_GIT_COMMIT);
     try {
       await pool.query('SELECT 1');
       if (mongo.connection.readyState !== 1) throw new Error('MongoDB unavailable');
@@ -59,7 +63,7 @@ function createApp({ config, pool, mongo, sessionStore, services = createService
   app.use((req, res) => res.status(404).render('error', { title: 'Page not found',
     message: 'This page is not available.' }));
   app.use((error, req, res, next) => {
-    console.error('Request failed', { type: error.name });
+    if(!error.safe)logFailure('http-request',error);
     if (res.headersSent) return next(error);
     const status=error.safe?error.status:400===error.status?400:500;
     const message=error.safe?error.message:'We could not complete your request. Please try again.';

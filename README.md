@@ -4,6 +4,8 @@ Buy Smart â€¢ Sell Easy â€¢ Bid Better
 
 A student marketplace for Sherubtse College, Bhutan. One Express service serves EJS, API routes and Socket.IO. PostgreSQL owns transactional state; MongoDB owns messaging, notifications and activity records.
 
+For current production setup, startup diagnostics and verified environment names, see [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md). Production is pinned to Node 22, uses the public HTTPS `APP_BASE_URL` (or Render's injected URL fallback), runs safe migrations/index setup during startup, and enforces certificate-verified remote PostgreSQL TLS. Older pre-deploy instructions below are superseded by that guide; an existing Render pre-deploy hook may be cleared because startup performs the same checks.
+
 ## UI redesign — Phase 1
 
 The design-system foundation is implemented across existing pages: the requested navy/gold palette, locally served Inter, shared typography/spacing/control tokens, responsive navigation and footer, form/content cards, focus indicators, skip navigation and reduced-motion support. No schema changes or account changes are needed. See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) for component rules and [REDESIGN_PLAN.md](REDESIGN_PLAN.md) for the audit and remaining implementation phases.
@@ -19,6 +21,8 @@ The later implementation now includes marketplace, profiles, dashboards, approva
 Run `npm run admin:create` from a trusted terminal (`npm.cmd run admin:create` on PowerShell). Enter the administrator email. For a new account, enter its name and a strong password; password input is hidden. For an existing account, explicitly type `PROMOTE` to confirm the role change. Promotion preserves its password, profile, listings and history. Alternatively provide `ADMIN_EMAIL`, `ADMIN_NAME`, `ADMIN_PASSWORD`, and, only when intentionally promoting an existing account, `ADMIN_CONFIRM_PROMOTION=PROMOTE` through a protected shell environment; never put passwords in command arguments or commit them. No default administrator is created.
 
 Log in at `/login` with the account's own credentials. New/unverified accounts must finish real emailed OTP verification before `/admin` access. Existing administrators remain subject to verification and suspension checks. Students cannot set their role through registration. The protected CLI has been tested for explicit promotion, account/listing preservation and idempotence in an isolated database schema.
+
+Login and registration password fields include accessible eye buttons; each field toggles independently without changing its value or submitting the form. Navigation highlights the current destination (including the specific dashboard/admin section), and page content uses a short entrance animation. Reduced-motion preferences disable the animation and transitions.
 
 Every student submission now starts **Pending Review**. In `/admin/approvals`, inspect the listing and supply a reason to approve/reject. Approved available products appear in the homepage and marketplace. Hidden products remain visible only to their owner or an admin. Editing resubmits for review; listings with bids or active transactions cannot be edited or withdrawn. Existing product records were retained and now require review too.
 
@@ -117,6 +121,7 @@ Set database network access for Render and verify the health endpoint. PostgreSQ
 - **Session table missing:** run `npm run migrate` against the same database used by the web service.
 - **Failed running server.js:** read the startup message above the watcher notice. Startup checks report missing session/verification tables; run `npm.cmd run migrate` and restart. Database connection failures include redacted guidance for authentication, DNS or firewall problems.
 - **Port already in use:** only run one development server. If `http://localhost:3000/health` responds, open the existing website; otherwise identify the process using your configured port or set a free `PORT` in `.env` before restarting.
+- **Starting development twice:** `npm.cmd run dev` now recognizes this checkout's running server and prints its URL rather than starting another watcher. To restart, press Ctrl+C in the original server terminal first. A different application using the same port is not treated as ReMarket or terminated automatically.
 - **Health 503:** check both database services. SMTP and Cloudinary are not health dependencies.
 - **CSRF 403:** reload the form and submit the session token as `_csrf` or `X-CSRF-Token`. Cookies must be enabled.
 - **Production session cookie absent:** verify HTTPS, the Render proxy and `NODE_ENV`; local development uses HTTP-compatible cookies.

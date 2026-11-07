@@ -246,3 +246,23 @@ input[type='checkbox'] { width: 1.1rem; height: 1.1rem; accent-color: var(--rm-n
 .filter-bar { padding:1.5rem; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1rem; }
 @media(max-width:1023px){.listing-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.site-nav{flex-wrap:wrap;padding-block:1rem}}
 @media(max-width:600px){.listing-grid,.filter-bar{grid-template-columns:1fr}.nav-links{width:100%;gap:1rem}.brand-name{font-size:1rem}.site-header{position:relative}}
+
+/* Password reveal controls keep the original input and validation intact. */
+.password-field { position:relative; }
+.password-field .form-control { padding-right:3.25rem; }
+.password-toggle { position:absolute;right:1px;top:1px;bottom:1px;width:44px;min-height:44px;border:0;border-radius:0 .5rem .5rem 0;background:transparent;color:var(--rm-secondary);display:grid;place-items:center; }
+.password-toggle[hidden] { display:none; }
+.password-toggle:hover,.password-toggle[aria-pressed='true'] { color:var(--rm-navy);background:var(--rm-info-bg); }
+.password-toggle:focus-visible { outline:3px solid var(--rm-focus);outline-offset:2px;z-index:1; }
+.password-field input::-ms-reveal { display:none; }
+
+/* Active destinations remain identifiable independently of animation. */
+.nav-link { position:relative; }
+.nav-link::after { content:'';position:absolute;left:0;right:0;bottom:.2rem;height:2px;background:var(--rm-gold);transform:scaleX(0);transform-origin:left;transition:transform var(--rm-duration) ease-out; }
+.nav-link:hover::after,.nav-link[aria-current='page']::after { transform:scaleX(1); }
+.nav-link[aria-current='page'] { color:var(--rm-navy);font-weight:700; }
+.nav-links .btn[aria-current='page'] { box-shadow:inset 0 -3px 0 var(--rm-gold); }
+.workspace-nav a { border-radius:var(--rm-radius-sm);transition:background-color var(--rm-duration),color var(--rm-duration); }
+.workspace-nav a[aria-current='page'] { color:var(--rm-navy);background:var(--rm-info-bg);font-weight:650;box-shadow:inset 3px 0 0 var(--rm-gold); }
+.page-shell { animation:page-enter 240ms ease-out both; }
+@keyframes page-enter { from { opacity:0;transform:translateY(6px); } to { opacity:1;transform:none; } }

@@ -1,7 +1,8 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { createHash } = require('node:crypto');
-const { createPool } = require('../config/databases');
+const { createPool,postgresUrl,databaseFailure } = require('../config/databases');
+const {startupError,logFailure}=require('../config/diagnostics');
 require('dotenv').config({ quiet: true });
 
 async function migrate(pool) {
@@ -17,7 +18,7 @@ async function migrate(pool) {
       const checksum = createHash('sha256').update(sql).digest('hex');
       const prior = await client.query('SELECT checksum FROM schema_migrations WHERE name = $1', [name]);
       if (prior.rowCount) {
-        if (prior.rows[0].checksum !== checksum) throw new Error(`Applied migration changed: ${name}`);
+        if (prior.rows[0].checksum !== checksum) throw startupError('migrations','MIGRATION_CHECKSUM_CHANGED',`Applied migration changed: ${name}. Restore that file and add a new migration; existing data must not be reset.`);
         continue;
       }
       await client.query('BEGIN');
@@ -33,14 +34,16 @@ async function migrate(pool) {
     finally { client.release(); }
   }
 }
+async function runMigrations(config){
+  const pool=createPool(postgresUrl(config.DIRECT_DATABASE_URL||config.DATABASE_URL,{direct:true}));
+  try{await migrate(pool);}catch(error){throw databaseFailure('PostgreSQL',error);}finally{await pool.end();}
+}
 if (require.main === module) {
   if (!process.env.DATABASE_URL) {
     console.error('DATABASE_URL is required');
     process.exitCode = 1;
   } else {
-    const pool = createPool(process.env.DATABASE_URL);
-    migrate(pool).catch(error => { console.error('Migration failed:', error.message); process.exitCode = 1; })
-      .finally(() => pool.end());
+    runMigrations(process.env).catch(error=>{logFailure('migrations',error);process.exitCode=1;});
   }
 }
-module.exports = { migrate };
+module.exports = { migrate,runMigrations };

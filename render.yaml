@@ -3,14 +3,18 @@ services:
     name: sherubtse-remarket
     runtime: node
     buildCommand: npm ci
-    preDeployCommand: npm run migrate && node scripts/sync-mongo-indexes.js
+    # server.js runs locked, checksum-verified migrations and indexes on every boot.
+    # This also works for service plans that do not support pre-deploy commands.
     startCommand: npm start
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: "22"
       - key: APP_BASE_URL
-        sync: false
+        # Public origin confirmed by the operator; not a credential.
+        value: https://sherubtse-remarket.onrender.com
       - key: DATABASE_URL
         sync: false
       - key: MONGODB_URI

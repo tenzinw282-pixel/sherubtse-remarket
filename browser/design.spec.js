@@ -44,11 +44,28 @@ test('marketplace: responsive layouts, keyboard focus and WCAG scans', { timeout
       const response = await page.goto(origin + route);
       assert.ok([200, 404].includes(response.status()), `${route}: expected rendered page`);
       await page.evaluate(() => document.fonts.ready);
+      await page.locator('#main-content').evaluate(element=>Promise.all(element.getAnimations().map(animation=>animation.finished.catch(()=>{}))));
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${route} overflows at ${width}px`);
       assert.ok(await page.evaluate(() => document.fonts.check('16px Inter')), 'Inter loads locally');
       const scan = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
       assert.deepEqual(scan.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) })), [], `${route} accessibility at ${width}px`);
     }
+    await page.goto(origin+'/login');
+    const password=page.locator('#password');
+    await password.fill('fixture-only-password');
+    await page.getByRole('button',{name:'Show password',exact:true}).click();
+    assert.equal(await password.getAttribute('type'),'text');
+    assert.equal(await page.getByRole('button',{name:'Hide password',exact:true}).getAttribute('aria-pressed'),'true');
+    assert.ok(await password.evaluate(input=>input.value==='fixture-only-password'));
+    await page.getByRole('button',{name:'Hide password',exact:true}).press('Space');
+    assert.equal(await password.getAttribute('type'),'password');
+    assert.equal(await page.locator('.nav-links a[aria-current="page"]').getAttribute('href'),'/login');
+    assert.equal(await page.locator('#main-content').evaluate(element=>getComputedStyle(element).animationName),'page-enter');
+    await page.goto(origin+'/register');
+    await page.getByRole('button',{name:'Show confirm password',exact:true}).click();
+    assert.equal(await page.locator('#confirmPassword').getAttribute('type'),'text');
+    assert.equal(await page.locator('#password').getAttribute('type'),'password');
+    await page.getByRole('button',{name:'Hide confirm password',exact:true}).click();
     for (const width of [320, 375, 768, 1024, 1440]) {
       for (const route of ['/', '/marketplace','/auctions','/register', '/login', '/terms', '/missing',`/users/${userId}`]) await check(route, width);
       await page.goto(origin + '/');
@@ -61,6 +78,7 @@ test('marketplace: responsive layouts, keyboard focus and WCAG scans', { timeout
     assert.equal(await page.evaluate(() => document.activeElement.id), 'main-content');
     await page.emulateMedia({ reducedMotion: 'reduce' });
     assert.equal(await page.locator('.btn-primary').first().evaluate(el => getComputedStyle(el).transitionDuration), '0s');
+    assert.equal(await page.locator('#main-content').evaluate(element=>getComputedStyle(element).animationName),'none');
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.setViewportSize({ width: 640, height: 450 });
     await page.goto(origin + '/register');
@@ -75,6 +93,10 @@ test('marketplace: responsive layouts, keyboard focus and WCAG scans', { timeout
       for (const route of ['/sell', '/verify-email', `/products/${productId}`,'/dashboard','/dashboard/listings','/profile','/messages','/notifications','/dashboard/purchases','/dashboard/sales','/dashboard/bids','/dashboard/won-auctions','/dashboard/favorites']) await check(route, width);
     }
     mockRole='admin';
+    await page.goto(origin+'/dashboard/listings');
+    assert.equal(await page.locator('.workspace-nav a[aria-current="page"]').getAttribute('href'),'/dashboard/listings');
+    await page.goto(origin+'/admin/users');
+    assert.equal(await page.locator('.admin-sidebar a[aria-current="page"]').getAttribute('href'),'/admin/users');
     for(const width of [320,375,768,1024,1440])for(const route of ['/admin','/admin/users','/admin/approvals','/admin/products','/admin/categories','/admin/announcements'])await check(route,width);
     assert.deepEqual(pageErrors, [], 'No browser JavaScript errors');
     await context.close();

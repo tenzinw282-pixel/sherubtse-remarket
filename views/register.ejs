@@ -7,8 +7,8 @@
 <label class="form-label" for="fullName">Full name</label><input class="form-control mb-3" id="fullName" name="fullName" required minlength="2" maxlength="120" autocomplete="name">
 <label class="form-label" for="email">Email</label><input class="form-control mb-3" id="email" name="email" type="email" required maxlength="254" autocomplete="email">
 <label class="form-label" for="studentId">Student ID (optional)</label><input class="form-control mb-3" id="studentId" name="studentId" maxlength="80">
-<label class="form-label" for="password">Password (at least 12 characters)</label><input class="form-control mb-3" id="password" name="password" type="password" required minlength="12" maxlength="72" autocomplete="new-password">
-<label class="form-label" for="confirmPassword">Confirm password</label><input class="form-control mb-3" id="confirmPassword" name="confirmPassword" type="password" required autocomplete="new-password">
+<label class="form-label" for="password">Password (at least 12 characters)</label><%- include('partials/password-input',{id:'password',label:'password',autocomplete:'new-password',registration:true}) %>
+<label class="form-label" for="confirmPassword">Confirm password</label><%- include('partials/password-input',{id:'confirmPassword',label:'confirm password',autocomplete:'new-password'}) %>
 <label class="terms-check"><input type="checkbox" name="terms" required><span>I accept the <a href="/terms">terms and privacy policy</a>.</span></label>
 <button class="btn btn-primary" type="submit">Register and email verification code</button>
 </form><p class="mt-3"><a href="/login">Already registered? Log in</a></p>

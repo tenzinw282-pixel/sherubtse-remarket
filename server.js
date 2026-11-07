@@ -1,52 +1,62 @@
 const http = require('node:http');
-const {createRealtime}=require('./services/realtime');
-const {startJobs}=require('./jobs/marketplace');
-const { readConfig } = require('./config/env');
-const { connectDatabases } = require('./config/databases');
-const { createApp } = require('./app');
+const {logStage,logFailure}=require('./config/diagnostics');
 
 async function start() {
-  let config;
-  try { config = readConfig(); }
-  catch (error) {
-    // Configuration errors name fields only; connection errors below remain redacted.
-    console.error('Configuration error:', error.message);
-    process.exitCode = 1;
-    return;
+  let stage='configuration',databases,server,io,jobs,stopping=false;
+  async function shutdown(){
+    if(stopping)return;stopping=true;
+    const deadline=setTimeout(()=>process.exit(1),10000);deadline.unref();
+    try{
+      await jobs?.stop();
+      if(io)await new Promise(resolve=>io.close(resolve));
+      else if(server?.listening)await new Promise(resolve=>server.close(resolve));
+    }finally{await databases?.close();clearTimeout(deadline);}
   }
-  const databases = await connectDatabases(config);
-  const { app, sessionMiddleware } = createApp({ config, pool: databases.pool, mongo: databases.mongoose });
-  const server = http.createServer(app);
-  const io=createRealtime({server,sessionMiddleware,pool:databases.pool,baseUrl:config.APP_BASE_URL});
-  const publish=(room,event,data)=>io.to(room).emit(event,data);app.locals.publish=publish;
-  app.locals.disconnectUser=id=>io.in(`user:${id}`).disconnectSockets(true);
-  let jobs;
-  server.on('error', async error => {
-    await jobs?.stop();io.close();
-    if (error.code === 'EADDRINUSE') console.error(`Port ${config.PORT} is already in use. Open http://localhost:${config.PORT} if ReMarket is already running, or stop the duplicate server before restarting.`);
-    else console.error('HTTP server could not start. Check the port and local network permissions.');
-    await databases.close();
-    process.exitCode = 1;
-  });
-  server.listen(config.PORT, '0.0.0.0', () => {
-    jobs=startJobs({pool:databases.pool,commerce:app.locals.commerce,publish});
-    console.log(`Sherubtse ReMarket: http://localhost:${config.PORT}`);
-  });
-  let stopping = false;
-  async function shutdown() {
-    if (stopping) return;
-    stopping = true;
-    const deadline = setTimeout(() => process.exit(1), 10000);
-    deadline.unref();
-    await jobs?.stop();
-    await new Promise(resolve=>io.close(resolve));
-    await databases.close();
-    clearTimeout(deadline);
+  try{
+    // Load application dependencies inside this boundary so import failures are logged too.
+    const {readConfig}=require('./config/env');
+    const config=readConfig();
+    logStage(stage,`Validated ${config.NODE_ENV} configuration; origin source ${config.APP_BASE_URL_SOURCE}; Node ${process.version}.`);
+    if(config.APP_URL)console.warn('APP_URL is ignored. APP_BASE_URL is the canonical public origin setting.');
+    const {existingServer,reportExisting}=require('./config/runtime');
+    if(config.NODE_ENV==='development'){
+      const existing=await existingServer(config.PORT);
+      if(existing){reportExisting(config.PORT,existing);return;}
+    }
+    stage='migrations';logStage(stage,'Checking locked, checksum-verified PostgreSQL migrations using a direct connection.');
+    await require('./scripts/migrate').runMigrations(config);
+    stage='databases';
+    databases=await require('./config/databases').connectDatabases(config);
+    logStage(stage,'PostgreSQL schema and MongoDB connection verified.');
+    stage='mongodb-indexes';await require('./scripts/sync-mongo-indexes').createMongoIndexes();
+    logStage(stage,'MongoDB indexes verified.');
+    stage='application';
+    const {app,sessionMiddleware}=require('./app').createApp({config,pool:databases.pool,mongo:databases.mongoose});
+    server=http.createServer(app);
+    io=require('./services/realtime').createRealtime({server,sessionMiddleware,pool:databases.pool,baseUrl:config.APP_BASE_URL});
+    const publish=(room,event,data)=>io.to(room).emit(event,data);app.locals.publish=publish;
+    app.locals.disconnectUser=id=>io.in(`user:${id}`).disconnectSockets(true);
+    stage='listen';
+    await new Promise((resolve,reject)=>{
+      server.once('error',reject);
+      server.listen(config.PORT,'0.0.0.0',()=>{server.removeListener('error',reject);resolve();});
+    });
+    jobs=require('./jobs/marketplace').startJobs({pool:databases.pool,commerce:app.locals.commerce,publish});
+    logStage('ready',`Listening on 0.0.0.0:${config.PORT}; public origin ${config.APP_BASE_URL}.`);
+    server.on('error',error=>{logFailure('http-runtime',error);process.exitCode=1;void shutdown().catch(failure=>logFailure('shutdown',failure));});
+    const onSignal=()=>void shutdown().catch(error=>{logFailure('shutdown',error);process.exitCode=1;});
+    process.once('SIGTERM',onSignal);process.once('SIGINT',onSignal);
+    return {server,app,shutdown};
+  }catch(error){
+    logFailure(stage,error);
+    if(error.code==='EADDRINUSE')console.error('The configured PORT is already in use. Stop the duplicate process or configure another PORT.');
+    try{await shutdown();}catch(failure){logFailure('shutdown',failure);}
+    process.exitCode=1;
+    return null;
   }
-  process.on('SIGTERM', shutdown);
-  process.on('SIGINT', shutdown);
 }
-start().catch(error => {
-  console.error(error.name === 'DatabaseStartupError' ? error.message : 'Startup failed. Check configuration, migrations, and service connectivity.');
+if(require.main===module)start().catch(error => {
+  logFailure('bootstrap',error);
   process.exitCode = 1;
 });
+module.exports={start};

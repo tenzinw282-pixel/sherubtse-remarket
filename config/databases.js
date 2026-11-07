@@ -31,8 +31,8 @@ function postgresUrl(connectionString,{direct=false}={}) {
   if(direct&&url.hostname.endsWith('.neon.tech'))url.hostname=url.hostname.replace('-pooler.','.');
   return url.toString();
 }
-function createPool(connectionString) {
-  const pool = new Pool({ connectionString:postgresUrl(connectionString), max: 10, connectionTimeoutMillis: 15000,
+function createPool(connectionString,{max=10,connectionTimeoutMillis=15000}={}) {
+  const pool = new Pool({ connectionString:postgresUrl(connectionString), max, connectionTimeoutMillis,
     idleTimeoutMillis: 30000, options: '-c timezone=UTC' });
   pool.on('error', error => logFailure('postgresql-pool',databaseFailure('PostgreSQL',error)));
   return pool;

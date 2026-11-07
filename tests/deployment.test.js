@@ -84,4 +84,5 @@ test('secret gate identifies configured values and private key/token markers wit
   assert.deepEqual(findingsFor(keyMarker,[]),['private key']);
   assert.deepEqual(findingsFor('SMTP_PASS=fixture-private-do-not-publish',[]),['non-placeholder environment credential']);
   assert.deepEqual(findingsFor('SMTP_PASS=replace-me',['different-fixture-secret']),[]);
+  assert.deepEqual(findingsFor('DIRECT_DATABASE_URL=\n# Migration timeout bounds',[]),[]);
 });

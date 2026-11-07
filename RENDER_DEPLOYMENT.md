@@ -1,5 +1,7 @@
 # Render startup repair and verification
 
+For the later migration-stage investigation, bounded runner, unchanged-history audit and exact diagnostic codes, see [MIGRATION_STARTUP.md](MIGRATION_STARTUP.md). The previous root-cause limits still apply: a log excerpt with no fatal line cannot identify the remote failure by itself.
+
 ## Confirmed findings
 
 - The earlier `Production requires HTTPS` error is an intentional validation failure: an HTTP `APP_BASE_URL` stops startup before the server binds. `APP_URL` is not consumed. The local development file had subsequently been changed to `https://localhost:3000`; that is also not a valid production origin and breaks local HTTP WebSocket origin checks. Local development is restored to HTTP localhost; private credentials were not changed or committed.

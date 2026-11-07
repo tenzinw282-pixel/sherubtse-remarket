@@ -1,8 +1,15 @@
 const http = require('node:http');
-const {logStage,logFailure}=require('./config/diagnostics');
+const {logStage,logFailure,startupError}=require('./config/diagnostics');
 
 async function start() {
   let stage='configuration',databases,server,io,jobs,stopping=false;
+  const interrupted=signal=>{
+    logFailure('startup',startupError('startup','STARTUP_INTERRUPTED',`Process received ${signal} before readiness during ${stage}. Check platform deploy cancellation, migration connection and lock diagnostics.`),{synchronous:true});
+    process.exit(1);
+  };
+  const onStartupTerm=()=>interrupted('SIGTERM'),onStartupInt=()=>interrupted('SIGINT');
+  process.once('SIGTERM',onStartupTerm);process.once('SIGINT',onStartupInt);
+  function removeStartupSignals(){process.removeListener('SIGTERM',onStartupTerm);process.removeListener('SIGINT',onStartupInt);}
   async function shutdown(){
     if(stopping)return;stopping=true;
     const deadline=setTimeout(()=>process.exit(1),10000);deadline.unref();
@@ -21,7 +28,7 @@ async function start() {
     const {existingServer,reportExisting}=require('./config/runtime');
     if(config.NODE_ENV==='development'){
       const existing=await existingServer(config.PORT);
-      if(existing){reportExisting(config.PORT,existing);return;}
+      if(existing){removeStartupSignals();reportExisting(config.PORT,existing);return;}
     }
     stage='migrations';logStage(stage,'Checking locked, checksum-verified PostgreSQL migrations using a direct connection.');
     await require('./scripts/migrate').runMigrations(config);
@@ -42,13 +49,15 @@ async function start() {
       server.listen(config.PORT,'0.0.0.0',()=>{server.removeListener('error',reject);resolve();});
     });
     jobs=require('./jobs/marketplace').startJobs({pool:databases.pool,commerce:app.locals.commerce,publish});
+    stage='ready';removeStartupSignals();
     logStage('ready',`Listening on 0.0.0.0:${config.PORT}; public origin ${config.APP_BASE_URL}.`);
     server.on('error',error=>{logFailure('http-runtime',error);process.exitCode=1;void shutdown().catch(failure=>logFailure('shutdown',failure));});
     const onSignal=()=>void shutdown().catch(error=>{logFailure('shutdown',error);process.exitCode=1;});
     process.once('SIGTERM',onSignal);process.once('SIGINT',onSignal);
     return {server,app,shutdown};
   }catch(error){
-    logFailure(stage,error);
+    removeStartupSignals();
+    if(!error.migrationLogged)logFailure(stage,error,{synchronous:true});
     if(error.code==='EADDRINUSE')console.error('The configured PORT is already in use. Stop the duplicate process or configure another PORT.');
     try{await shutdown();}catch(failure){logFailure('shutdown',failure);}
     process.exitCode=1;

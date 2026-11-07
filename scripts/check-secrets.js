@@ -6,7 +6,7 @@ function findingsFor(text,secrets){
   if(secrets.some(value=>value.length>=8&&text.includes(value)))findings.push('configured credential value');
   if(/-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/.test(text))findings.push('private key');
   if(/\b(?:ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,}|AKIA[A-Z0-9]{16})\b/.test(text))findings.push('access token');
-  const assignments=text.matchAll(/^\s*(?:SMTP_PASS|CLOUDINARY_API_SECRET|SESSION_SECRET|DATABASE_URL|DIRECT_DATABASE_URL|MONGODB_URI)\s*=\s*([^\r\n]*)/gm);
+  const assignments=text.matchAll(/^[ \t]*(?:SMTP_PASS|CLOUDINARY_API_SECRET|SESSION_SECRET|DATABASE_URL|DIRECT_DATABASE_URL|MONGODB_URI)[ \t]*=[ \t]*([^\r\n]*)/gm);
   for(const match of assignments){const value=match[1].trim().replace(/^['"]|['"]$/g,'');if(value&&!/replace|placeholder|USER:PASSWORD|localhost|example|<.*>|^\$\{/i.test(value)){findings.push('non-placeholder environment credential');break;}}
   return findings;
 }

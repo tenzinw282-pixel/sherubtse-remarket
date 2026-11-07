@@ -12,12 +12,16 @@ function startupError(stage, code, message, providerCodes=[]) {
   error.name='StartupError';error.stage=stage;error.code=code;error.providerCodes=[...new Set(providerCodes)];error.publicDiagnostic=true;
   return error;
 }
-function logFailure(stage,error) {
+function logFailure(stage,error,{synchronous=false}={}) {
   const record={stage:error?.publicDiagnostic?error.stage:stage,
     code:error?.publicDiagnostic?error.code:'UNEXPECTED_ERROR',
     providerCodes:error?.publicDiagnostic?error.providerCodes:errorCodes(error),
     message:error?.publicDiagnostic?error.message:error?.code==='MODULE_NOT_FOUND'?'A required module is missing. Run npm ci with the pinned Node 22 runtime and ensure all required source files are committed.':'Unexpected failure. Check dependency installation, configuration and the preceding startup stage.'};
-  console.error(JSON.stringify({level:'error',...record}));
+  const line=JSON.stringify({level:'error',...record});
+  if(synchronous){
+    // Fatal startup diagnostics must reach Render before cleanup or process exit.
+    try{require('node:fs').writeSync(2,line+'\n');}catch{console.error(line);}
+  }else console.error(line);
 }
 function logStage(stage,message) { console.log(JSON.stringify({level:'info',stage,message})); }
 module.exports={errorCodes,startupError,logFailure,logStage};

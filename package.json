@@ -11,11 +11,13 @@
     "admin:create": "node scripts/create-admin.js",
     "dev": "node scripts/dev.js",
     "migrate": "node scripts/migrate.js",
+    "migrate:diagnose": "node scripts/diagnose-migrations.js",
     "test": "node --test",
     "test:ui": "node --test browser/design.spec.js",
     "test:integration": "node --test integration/marketplace.spec.js",
     "test:admin": "node --test integration/admin.spec.js",
     "test:database": "node scripts/check-database.js",
+    "test:migrations": "node --test integration/migrations.spec.js",
     "check:services": "node scripts/check-services.js",
     "check:upload": "node scripts/check-upload.js",
     "check:secrets": "node scripts/check-secrets.js"

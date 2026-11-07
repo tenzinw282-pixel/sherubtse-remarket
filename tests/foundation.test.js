@@ -75,11 +75,12 @@ test('migration runner rolls back failed migration and releases lock', async () 
   const calls = [];
   const client = { query: async sql => {
     calls.push(sql);
-    if (sql.startsWith('SELECT checksum')) return { rowCount: 0 };
+    if (sql.startsWith('SELECT pg_try_advisory_lock')) return {rows:[{acquired:true}]};
+    if (sql.startsWith('SELECT name,checksum')) return { rows:[] };
     if (sql.includes('CREATE TABLE users')) throw new Error('simulated DDL failure');
     return {};
   }, release: () => calls.push('release') };
-  await assert.rejects(migrate({ connect: async () => client }), /simulated/);
+  await assert.rejects(migrate({ connect: async () => client }), error=>error.publicDiagnostic&&error.stage==='migrations');
   assert.ok(calls.includes('ROLLBACK'));
   assert.ok(calls.some(sql => sql.startsWith('SELECT pg_advisory_unlock')));
   assert.equal(calls.at(-1), 'release');

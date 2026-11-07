@@ -26,13 +26,40 @@ function createResendMail(config) {
   };
 }
 
+function createBrevoMail(config) {
+  return {
+    async sendMail({ from, to, subject, text, html }) {
+      const senderMatch = /^\s*(.*?)\s*<([^<>]+)>\s*$/.exec(from || '');
+      const sender = senderMatch
+        ? { name: senderMatch[1].trim(), email: senderMatch[2].trim() }
+        : { email: from };
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'api-key': config.BREVO_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender, to: [{ email: to }], subject, textContent: text, htmlContent: html }),
+        signal: AbortSignal.timeout(15000)
+      });
+      if (!response.ok) {
+        const error = new Error('Email provider rejected the request.');
+        error.code = 'EMAIL_API_FAILED';
+        error.status = response.status;
+        throw error;
+      }
+      return { accepted: [to] };
+    },
+    close() {}
+  };
+}
+
 function createServices(config) {
   cloudinary.config({ cloud_name: config.CLOUDINARY_CLOUD_NAME,
     api_key: config.CLOUDINARY_API_KEY, api_secret: config.CLOUDINARY_API_SECRET,
     secure: true });
-  const mail = config.RESEND_API_KEY
-    ? createResendMail(config)
-    : nodemailer.createTransport({ host: config.SMTP_HOST, port: config.SMTP_PORT,
+  const mail = config.BREVO_API_KEY
+    ? createBrevoMail(config)
+    : config.RESEND_API_KEY
+      ? createResendMail(config)
+      : nodemailer.createTransport({ host: config.SMTP_HOST, port: config.SMTP_PORT,
       secure: config.SMTP_PORT === 465, requireTLS: config.SMTP_PORT !== 465,
       logger: false, debug: false, connectionTimeout: 15000, greetingTimeout: 15000,
       socketTimeout: 20000, disableFileAccess: true, disableUrlAccess: true,

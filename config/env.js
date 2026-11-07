@@ -6,8 +6,9 @@ dotenv.config({ path:path.join(__dirname,'../.env'),quiet:true });
 
 function readConfig(env = process.env) {
   const required = ['DATABASE_URL', 'MONGODB_URI', 'SESSION_SECRET',
-    'SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'EMAIL_FROM', 'CLOUDINARY_CLOUD_NAME',
+    'EMAIL_FROM', 'CLOUDINARY_CLOUD_NAME',
     'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
+  if (!env.RESEND_API_KEY?.trim()) required.push('SMTP_HOST', 'SMTP_USER', 'SMTP_PASS');
   const fail=(code,message)=>{throw startupError('configuration',code,message);};
   const missing = required.filter(key => typeof env[key]!=='string'||!env[key].trim());
   if (missing.length) fail('CONFIG_MISSING',`Missing environment variables: ${missing.join(', ')}. Configure these in Render > service > Environment.`);
